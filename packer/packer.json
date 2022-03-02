@@ -1,0 +1,74 @@
+{
+    "Variables": {
+        "aws_region": "af-south-1",
+        "aws_profile": "terraform",
+        "creation_date": "{{isotime}}",
+        "bitcoin_version": "0.21.1",
+        "coin": "bitcoin"
+    },
+    "Builders": [
+        {
+            "type": "amazon-ebs",
+            "profile": "{{user `aws_profile`}}",
+            "region": "{{user `aws_region`}}",
+            "instance_type": "t2.micro",
+            "source_ami_filter": {
+              "filters": {
+                "virtualization-type": "hvm",
+                "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+                "root-device-type": "ebs"
+              },
+              "owners": ["099720109477"],
+              "most_recent": true
+            },
+            "ssh_username": "ubuntu",
+            "ami_name": "packer-bitcoin-{{user `bitcoin_version`}}-ami_{{isotime}}",
+            "ami_description": "packer-bitcoin-{{user `bitcoin_version`}}-ami_{{isotime}}",
+            "run_tags": {
+                "Name": "BUILDER_packer-bitcoin-{{user `bitcoin_version`}}-ami_{{isotime}}",
+                "Owner": "devops",
+                "Environment": "dev"
+            },
+            "tags": {
+                "Name": "packer-bitcoin-{{user `bitcoin_version`}}-ami_{{isotime}}",
+                "Owner": "devops",
+                "Environment": "dev",
+                "Version": "{{user `bitcoin_version`}}",
+                "creation_date": "{{isotime}}"
+            },
+            "vpc_filter": {
+              "filters": {
+                "tag:Name": "main",
+                "isDefault": "true"
+              }
+            },
+            "subnet_filter": {
+              "filters": {
+                "tag:Tier": "public"
+              },
+              "most_free": true,
+              "random": true
+            },
+            "launch_block_device_mappings": [
+                {
+                    "device_name": "/dev/xvdb",
+                    "encrypted": false,
+                    "delete_on_termination": true,
+                    "volume_size": 80
+                }
+            ]
+        }
+    ],
+    "Provisioners": [
+        {
+            "type": "shell",
+            "script": "scripts/bootstrap.sh"
+        },
+        {
+            "type": "ansible-local",
+            "playbook_file": "../ansible/playbook.yaml",
+            "playbook_dir": "../ansible",
+            "extra_arguments": [ "-vv --extra-vars \"coin={{ user `coin` }} bitcoin_version{{ user `bitcoin_version`}}\""]
+        }
+    ]
+}

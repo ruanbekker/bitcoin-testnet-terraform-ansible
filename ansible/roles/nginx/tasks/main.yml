@@ -1,0 +1,51 @@
+- name: install nginx
+  apt:
+    name:
+      - nginx
+      - apache2-utils
+    state: present
+  become: true
+  become_user: root
+  register: nginx_install
+
+- name: base64 encode rpc_user and rpc_password for nginx basic auth
+  shell: "echo -n {{ bitcoin_rpcuser }}:{{ bitcoin_rpcpassword }} | base64"
+  become: true
+  become_user: root
+  changed_when: nginx_install.changed
+  register: base64_password
+
+- name: Add bitcoin_rpcuser and bitcoin_rpcpassword to htpasswd file
+  shell: "sudo htpasswd -b -c /etc/nginx/passwords {{ rpc_user }} {{ rpc_password }}"
+  become: true
+  become_user: root
+  changed_when: nginx_install.changed
+
+- name: Generate nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf.j2
+    group: root
+    owner: root
+    mode: 0644
+  become: true
+  become_user: root
+
+- name: Generate nginx coin server config
+  ansible.builtin.template:
+    src: server.conf.j2
+    dest: "/etc/nginx/conf.d/{{ coin }}.conf"
+    group: root
+    owner: root
+    mode: 0644
+  become: true
+  become_user: root
+
+- name: Ensure nginx is enabled to start at boot
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: true
+  become_user: root

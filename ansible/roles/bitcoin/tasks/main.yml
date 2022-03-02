@@ -1,0 +1,127 @@
+---
+- name: Ensure bitcoin group exists
+  group:
+    name: "{{ bitcoin_os_group }}"
+    state: present
+  become: true
+  become_user: root
+
+- name: Ensure bitcoin user exists
+  user:
+    name: "{{ bitcoin_os_user }}"
+    shell: /bin/bash
+    append: yes
+    create_home: true
+  become: true
+  become_user: root
+
+- name: Ensure bitcoin user is added to the bitcoin group
+  user:
+    name: "{{ bitcoin_os_user }}"
+    groups: ["{{ bitcoin_os_group }}"]
+    append: yes
+  become: true
+  become_user: root
+
+- name: Download specified bitcoin version
+  get_url:
+    url: https://bitcoincore.org/bin/bitcoin-core-{{ bitcoin_version }}/bitcoin-{{ bitcoin_version }}-x86_64-linux-gnu.tar.gz
+    dest: /tmp/bitcoin-{{ bitcoin_version }}.tar.gz
+  become: true
+  become_user: root
+
+- name: Ensure bitcoin-{{ bitcoin_version }} directory exists
+  file:
+    path: /tmp/bitcoin-{{ bitcoin_version }}
+    state: directory
+    mode: 0755
+  become: true
+  become_user: root
+
+- name: Extract bitcoin archive to /tmp/bitcoin-{{ bitcoin_version }}
+  unarchive:
+    src: /tmp/bitcoin-{{ bitcoin_version }}.tar.gz
+    dest: /tmp/bitcoin-{{ bitcoin_version }}
+    extra_opts: [--strip-components=1]
+  become: true
+  become_user: root
+  register: bitcoin_installation
+
+- name: Ensure Bitcoin Core is installed
+  shell:
+    cmd: sudo install -m 0755 -o root -g root -t /usr/local/bin /tmp/bitcoin-{{ bitcoin_version }}/bin/*
+  become: true
+  become_user: root
+  changed_when: bitcoin_installation.changed
+
+- name: Ensure {{ bitcoin_datadir }} directory exists
+  file:
+    path: "{{ bitcoin_datadir }}"
+    state: directory
+    group: bitcoin
+    owner: bitcoin
+    mode: 0755
+  become: true
+  become_user: root
+
+- name: Generate bitcoin.conf
+  template:
+    src: bitcoin.conf.j2
+    dest: /etc/bitcoin/bitcoin.conf
+    group: bitcoin
+    owner: bitcoin
+    mode: 0644
+  become: true
+  become_user: root
+
+- name: Generate bitcoind.service
+  template:
+    src: bitcoind.service.j2
+    dest: /etc/systemd/system/bitcoind.service
+    group: root
+    owner: root
+    mode: 0644
+  become: true
+  become_user: root
+
+- name: Copy notify scripts to /usr/bin/
+  copy:
+    src: "{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    group: bitcoin
+    owner: bitcoin
+    mode: 0744
+  with_items:
+    - block_notify.sh
+    - wallet_notify.sh
+  become: true
+  become_user: root
+
+- name: Ensure /var/log/bitcoin log directory exists
+  file:
+    path: /var/log/bitcoin
+    state: directory
+    group: bitcoin
+    owner: bitcoin
+    mode: 0755
+  become: true
+  become_user: root
+
+- name: Enable bitcoind to start at boot
+  systemd:
+    name: bitcoind
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: true
+  become_user: root
+  ignore_errors: no 
+
+- name: Waiting for bitcoin listener port to become available
+  wait_for:
+    host: "{{ bitcoin_rpcbind }}"
+    port: "{{ bitcoin_rpcport }}"
+    delay: 30
+
+
+

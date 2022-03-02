@@ -1,0 +1,65 @@
+- name: Ensure all installed packages are upgraded
+  apt:
+    name: "*"
+    state: present
+  become: true
+  become_user: root
+
+- name: Ensure required packages are installed
+  apt:
+    name:
+      - git
+      - xfsprogs
+      - nginx
+      - net-tools
+      - tree
+    state: present
+  become: true
+  become_user: root
+
+- name: Copy ebsnvme-id script to /sbin/
+  copy:
+    src: ebsnvme-id
+    dest: /sbin/ebsnvme-id
+    mode: 0755
+  become: true
+  become_user: root
+
+- name: Copy 70-ec2-nvme-devices.rules to /etc/udev/rules.d/
+  copy:
+    src: 70-ec2-nvme-devices.rules
+    dest: /etc/udev/rules.d/70-ec2-nvme-devices.rules
+    mode: 0644
+  become: true
+  become_user: root
+  register: udevrules
+
+- name: Reload udev rules to map nvme volumes to the devices they are attached to
+  shell:
+    cmd: sudo udevadm control --reload-rules && udevadm trigger
+  become: true
+  become_user: root
+  changed_when: udevrules.changed
+
+- name: Create a xfs filesystem on /dev/xvdb
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/xvdb
+  become: true
+  become_user: root
+
+- name: Mount /dev/xvdb on {{ bitcoin_base_datadir }} directory
+  ansible.posix.mount:
+    path: "{{ bitcoin_base_datadir }}"
+    src: /dev/xvdb
+    fstype: xfs
+    opts: defaults,nofail
+    state: present
+  become: true
+  become_user: root
+
+- name: Ensure all devices are mounted
+  shell:
+    cmd: sudo mount --all
+  become: true
+  become_user: root

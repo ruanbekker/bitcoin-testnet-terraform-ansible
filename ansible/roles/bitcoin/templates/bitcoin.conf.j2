@@ -1,0 +1,19 @@
+datadir={{ bitcoin_datadir }}
+testnet=1
+printtoconsole=1
+rpcuser={{ bitcoin_rpcuser }}
+rpcpassword={{ bitcoin_rpcpassword }}
+walletnotify=/usr/bin/wallet_notify.sh %s %w
+blocknotify=/usr/bin/block_notify.sh %s
+prune={{ bitcoin_prune }}
+maxtxfee=0.00056
+txconfirmtarget=3
+zmqpubrawblock=tcp://127.0.0.1:28332
+zmqpubhashblock=tcp://127.0.0.1:28332
+zmqpubrawtx=tcp://127.0.0.1:28333
+zmqpubhashtx=tcp://127.0.0.1:28333
+[test]
+wallet=wallet
+rpcbind={{ bitcoin_rpcbind }}
+rpcallowip=127.0.0.1
+rpcport={{ bitcoin_rpcport }}

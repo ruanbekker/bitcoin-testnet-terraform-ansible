@@ -1,0 +1,15 @@
+[Unit]
+Description=Bitcoin Core Service
+After=network.target
+
+[Service]
+User={{ bitcoin_user }}
+Group={{ bitcoin_group }}
+Type=Simple
+LimitNOFILE=65536
+ExecStart=/usr/local/bin/bitcoind -conf=/etc/bitcoin/bitcoin.conf -datadir={{ bitcoin_datadir }} -daemon=0
+WorkingDirectory={{ bitcoin_datadir }}
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+bitcoin_rpcuser: "bitcoinrpc"
+bitcoin_rpcpassword: "bitcoinpassword"
+bitcoin_rpcbind: "127.0.0.1"
+bitcoin_rpcport: "18332"
+coin: "bitcoin"
