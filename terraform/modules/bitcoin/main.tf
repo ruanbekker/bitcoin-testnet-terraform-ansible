@@ -17,12 +17,12 @@ resource "aws_instance" "node" {
   subnet_id       = data.aws_subnet.tier.id
   vpc_security_group_ids = [ aws_security_group.node.id ]
   tags = {
-    Name = "${var.team}-${var.coin}-node-${var.environment}"
+    Name = "${var.team}-${var.cryptocurrency}-node-${var.environment}"
   }
 }
 
 resource "aws_security_group" "node" {
-  name        = "${var.team}-${var.coin}-node-${var.environment}-ec2-sg"
+  name        = "${var.team}-${var.cryptocurrency}-node-${var.environment}-ec2-sg"
   description = "Security Group for the EC2 Instance"
   vpc_id      = data.aws_vpc.default.id
 

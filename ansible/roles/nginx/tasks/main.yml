@@ -31,10 +31,10 @@
   become: true
   become_user: root
 
-- name: Generate nginx coin server config
+- name: Generate nginx cryptonode server config
   ansible.builtin.template:
     src: server.conf.j2
-    dest: "/etc/nginx/conf.d/{{ coin }}.conf"
+    dest: "/etc/nginx/conf.d/{{ currency }}.conf"
     group: root
     owner: root
     mode: 0644

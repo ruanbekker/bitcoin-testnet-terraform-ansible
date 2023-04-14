@@ -27,10 +27,10 @@ variable "team" {
   description = "The team name owning the resource."
 }
 
-variable "coin" {
+variable "cryptocurrency" {
   type        = string
   default     = "bitcoin"
-  description = "The crypto node name."
+  description = "The cryptocurrency implementation name."
 }
 
 variable "environment" {

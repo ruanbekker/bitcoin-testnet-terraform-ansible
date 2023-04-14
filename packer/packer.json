@@ -4,7 +4,7 @@
         "aws_profile": "terraform",
         "creation_date": "{{isotime}}",
         "bitcoin_version": "0.21.1",
-        "coin": "bitcoin"
+        "cryptocurrency": "bitcoin"
     },
     "Builders": [
         {
@@ -68,7 +68,7 @@
             "type": "ansible-local",
             "playbook_file": "../ansible/playbook.yaml",
             "playbook_dir": "../ansible",
-            "extra_arguments": [ "-vv --extra-vars \"coin={{ user `coin` }} bitcoin_version{{ user `bitcoin_version`}}\""]
+            "extra_arguments": [ "-vv --extra-vars \"cryptocurrency={{ user `cryptocurrency` }} bitcoin_version{{ user `bitcoin_version`}}\""]
         }
     ]
 }
